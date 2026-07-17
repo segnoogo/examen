@@ -129,6 +129,49 @@
   .cr-code{font-family:Consolas,monospace;font-size:.85rem;background:#0f1c31;color:#ffd97a;padding:8px 12px;border-radius:8px;margin:6px 0;white-space:pre-wrap;overflow-x:auto}
   .cr-line{font-size:.93rem;margin:3px 0}.cr-lbl{color:var(--muted);font-weight:600}
   .cr-exp{font-size:.9rem;color:#3d4a5c;background:var(--blue-soft);border-radius:9px;padding:9px 13px;margin-top:8px}
+
+  /* ---------- Une question par page (pager) ---------- */
+  #examHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  #eh_sec{font-size:.85rem;font-weight:700;color:var(--navy-2);background:var(--blue-soft);border-radius:20px;padding:6px 14px}
+  .flagbtn{font-size:.85rem;font-weight:600;color:var(--muted);background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:8px 14px;cursor:pointer;transition:all .15s}
+  .flagbtn:hover{border-color:var(--gold)}
+  .flagbtn.on{background:var(--gold-soft);border-color:var(--gold);color:#8a6d00}
+  .q-page{animation:fadein .2s ease}
+  @keyframes fadein{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+  .qpos{font-family:Consolas,monospace;font-weight:700;color:var(--navy);text-align:center;min-width:66px}
+  .ab-spacer{flex:1}
+  .btn.mini2{padding:9px 13px;font-size:.85rem}
+  .rev-stats{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}
+  .rev-s{flex:1;min-width:110px;background:#fbfcfe;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;font-size:.82rem;color:var(--muted)}
+  .rev-s b{display:block;font-size:1.5rem;color:var(--navy);margin-bottom:2px}
+  .rev-s.ok{border-color:#bfe3cf;background:#f4fbf7}
+  .rev-s.warn{border-color:#eec4bf;background:#fdf3f2}.rev-s.warn b{color:var(--red)}
+  .rev-s.flag{border-color:#f0dfae;background:var(--gold-soft)}.rev-s.flag b{color:#8a6d00}
+  .navgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:8px;margin-top:10px}
+  .navcell{position:relative;aspect-ratio:1;border:1.5px solid var(--line);background:#fff;border-radius:10px;font-weight:700;color:var(--muted);cursor:pointer;font-size:.95rem;transition:all .12s}
+  .navcell:hover{border-color:var(--navy-2)}
+  .navcell.ans{background:linear-gradient(135deg,var(--navy),var(--navy-2));color:#fff;border-color:transparent}
+  .navcell.flag{box-shadow:0 0 0 2px var(--gold)}
+  .navcell.cur{outline:3px solid var(--gold);outline-offset:1px}
+  .navcell .fdot{position:absolute;top:-8px;right:-5px;font-size:.72rem}
+  .navlegend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:.8rem;color:var(--muted)}
+  .navlegend span{display:inline-flex;align-items:center;gap:6px}
+  .lg{width:16px;height:16px;border-radius:5px;border:1.5px solid var(--line);display:inline-block}
+  .lg.ans{background:var(--navy);border-color:transparent}.lg.flag{box-shadow:0 0 0 2px var(--gold)}
+  .modal{position:fixed;inset:0;background:rgba(15,28,63,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}
+  .modal-box{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 30px 70px rgba(0,0,0,.4)}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
+  .modal-head b{color:var(--navy);font-size:1.05rem}
+  .modal-close{cursor:pointer;font-size:18px;color:var(--muted);padding:2px 9px;border-radius:6px}
+  .modal-close:hover{background:#f1f5fb}
+  .modal-body{padding:18px 20px;overflow:auto}
+  .modal-box.confirm{max-width:440px;text-align:center;padding:28px 26px}
+  .cf-ic{font-size:2.4rem;margin-bottom:8px}
+  .modal-box.confirm h3{color:var(--navy);font-size:1.2rem;margin-bottom:8px}
+  .modal-box.confirm p{color:var(--muted);font-size:.95rem;line-height:1.55}
+  .cf-warn{background:var(--red-soft);color:var(--red);border:1px solid #eec4bf;border-radius:10px;padding:10px 14px;font-size:.9rem;margin-top:14px}
+  .cf-actions{display:flex;gap:12px;justify-content:center;margin-top:22px;flex-wrap:wrap}
+  .cf-actions .btn{padding:13px 24px}
   .foot{text-align:center;color:var(--muted);font-size:.78rem;margin-top:26px}
 </style>
 </head>
@@ -206,8 +249,22 @@
     </div>
   </div>
 
-  <!-- EXAMEN -->
-  <div id="screenExam" class="hidden"><div id="exam"></div></div>
+  <!-- EXAMEN (une question par page) -->
+  <div id="screenExam" class="hidden">
+    <div id="examHead" class="hidden">
+      <span id="eh_sec"></span>
+      <button class="flagbtn" id="btnFlag">🚩 Marquer cette question</button>
+    </div>
+    <div id="exam"></div>
+    <div id="review" class="hidden">
+      <div class="card">
+        <h2 class="t">Vérifiez avant de soumettre</h2>
+        <div class="rev-stats" id="reviewStats"></div>
+        <p style="color:var(--muted);font-size:.92rem">Cliquez sur un numéro pour revoir une question. Les questions marquées 🚩 et sans réponse sont mises en évidence.</p>
+        <div class="navgrid" id="reviewGrid"></div>
+      </div>
+    </div>
+  </div>
 
   <!-- RÉSULTAT (contenu injecté) -->
   <div id="screenResult" class="hidden"></div>
@@ -218,11 +275,42 @@
 <div class="actionbar hidden" id="actionbar">
   <div class="ab-inner">
     <div id="timer">--:--:--</div>
-    <div class="progress-wrap">
-      <div class="progress-txt"><span id="progTxt">0 / 0</span><span id="saveTag" class="savetag"></span></div>
-      <div class="bar"><div id="progBar"></div></div>
+    <button class="btn ghost mini2" id="btnOverview">▦ Vue d'ensemble</button>
+    <span class="savetag" id="saveTag"></span>
+    <div class="ab-spacer"></div>
+    <button class="btn ghost" id="btnPrev">Précédent</button>
+    <div class="qpos" id="qpos">1 / 1</div>
+    <button class="btn gold" id="btnNext">Suivant</button>
+    <button class="btn green hidden" id="btnSubmit">Soumettre</button>
+  </div>
+</div>
+
+<!-- Vue d'ensemble (navigation) -->
+<div id="navModal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-head"><b>Vue d'ensemble des questions</b><span class="modal-close" id="navClose">✕</span></div>
+    <div class="modal-body">
+      <div class="navgrid" id="navGrid"></div>
+      <div class="navlegend">
+        <span><i class="lg ans"></i> Répondue</span>
+        <span><i class="lg"></i> Sans réponse</span>
+        <span><i class="lg flag"></i> Marquée 🚩</span>
+      </div>
     </div>
-    <button class="btn gold" id="submitBtn">Terminer</button>
+  </div>
+</div>
+
+<!-- Confirmation d'envoi -->
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-box confirm">
+    <div class="cf-ic">📤</div>
+    <h3>Soumettre votre copie ?</h3>
+    <p>Êtes-vous sûr(e) de vouloir soumettre vos réponses ? Après l'envoi, votre copie sera corrigée et ne pourra plus être modifiée.</p>
+    <div class="cf-warn hidden" id="cf_warn"></div>
+    <div class="cf-actions">
+      <button class="btn ghost" id="cfCancel">Annuler</button>
+      <button class="btn gold" id="cfOk">Oui, soumettre</button>
+    </div>
   </div>
 </div>
 
@@ -324,28 +412,59 @@ async function startExam(resume){
 }
 
 function renderExam(saved){
-  const wrap=$("exam");wrap.innerHTML="";ETAT.total=0;
-  ETAT.sections.forEach(sec=>{
-    const s=document.createElement("section");s.className="section";
-    s.innerHTML='<div class="sec-head"><span class="sec-num">'+sec.num+'</span><div><h3>'+esc(sec.title)+'<span class="sc-sub">'+esc(sec.sub||"")+'</span></h3></div></div>';
-    sec.questions.forEach(q=>{ETAT.total++;
-      const d=document.createElement("div");d.className="q";d.id="Q_"+q.qid;
-      let o='<div class="opts">';
-      q.options.forEach((op,di)=>{o+='<label class="opt"><input type="radio" name="'+q.qid+'" value="'+op.i+'"><span>'+(q.type==='vf'?'':'<span class="lt">'+LETTERS[di]+'.</span> ')+esc(op.t)+'</span></label>';});
-      o+='</div>';
-      d.innerHTML='<div class="q-top"><span class="q-chip">'+(q.type==='vf'?'Vrai / Faux':'Choix multiple')+'</span><span class="q-num">1 point</span></div><div class="enonce">'+esc(q.q)+'</div>'+(q.code?'<div class="code">'+esc(q.code)+'</div>':'')+o;
-      s.appendChild(d);
-    });
-    wrap.appendChild(s);
+  ETAT.flat=[];ETAT.flags={};
+  ETAT.sections.forEach(sec=>sec.questions.forEach(q=>ETAT.flat.push({secNum:sec.num,secTitle:sec.title,q:q})));
+  ETAT.total=ETAT.flat.length;
+  const wrap=$("exam");wrap.innerHTML="";
+  ETAT.flat.forEach((it,idx)=>{
+    const q=it.q;const d=document.createElement("div");d.className="q-page hidden";d.id="P_"+idx;
+    let o='<div class="opts">';
+    q.options.forEach((op,di)=>{o+='<label class="opt"><input type="radio" name="'+q.qid+'" value="'+op.i+'"><span>'+(q.type==='vf'?'':'<span class="lt">'+LETTERS[di]+'.</span> ')+esc(op.t)+'</span></label>';});
+    o+='</div>';
+    d.innerHTML='<div class="q"><div class="q-top"><span class="q-chip">'+(q.type==='vf'?'Vrai / Faux':'Choix multiple')+'</span><span class="q-num">Question '+(idx+1)+' / '+ETAT.total+'</span></div><div class="enonce">'+esc(q.q)+'</div>'+(q.code?'<div class="code">'+esc(q.code)+'</div>':'')+o+'</div>';
+    wrap.appendChild(d);
   });
-  Object.keys(saved||{}).forEach(qid=>{const el=document.querySelector('input[name="'+qid+'"][value="'+saved[qid]+'"]');if(el){el.checked=true;el.closest(".opt").classList.add("selected");el.closest(".q").classList.add("answered");}});
+  Object.keys(saved||{}).forEach(qid=>{const el=document.querySelector('input[name="'+qid+'"][value="'+saved[qid]+'"]');if(el){el.checked=true;el.closest(".opt").classList.add("selected");}});
   $("screenHome").classList.add("hidden");$("screenResult").classList.add("hidden");$("screenExam").classList.remove("hidden");$("actionbar").classList.remove("hidden");
-  updateProgress();window.scrollTo(0,0);window.addEventListener("beforeunload",beforeUnload);
+  showQuestion(0);window.addEventListener("beforeunload",beforeUnload);
 }
 function beforeUnload(e){if(!ETAT.finished){e.preventDefault();e.returnValue="";}}
-document.addEventListener("change",e=>{if(e.target.type==="radio"&&ETAT.sections&&!ETAT.finished){document.querySelectorAll('input[name="'+e.target.name+'"]').forEach(r=>r.closest(".opt").classList.toggle("selected",r.checked));const qd=e.target.closest(".q");if(qd)qd.classList.add("answered");updateProgress();scheduleSave();}});
-function collect(){const r={};ETAT.sections.forEach(sec=>sec.questions.forEach(q=>{const c=document.querySelector('input[name="'+q.qid+'"]:checked');if(c)r[q.qid]=parseInt(c.value,10);}));return r;}
-function updateProgress(){let d=0;ETAT.sections.forEach(sec=>sec.questions.forEach(q=>{if(document.querySelector('input[name="'+q.qid+'"]:checked'))d++;}));$("progTxt").textContent=d+" / "+ETAT.total+" questions";$("progBar").style.width=(ETAT.total?d/ETAT.total*100:0)+"%";}
+function isAnswered(qid){return !!document.querySelector('input[name="'+qid+'"]:checked');}
+function showQuestion(i){
+  ETAT.mode='q';ETAT.current=i;
+  $("review").classList.add("hidden");$("examHead").classList.remove("hidden");
+  document.querySelectorAll('.q-page').forEach((p,idx)=>p.classList.toggle('hidden',idx!==i));
+  const it=ETAT.flat[i];
+  $("eh_sec").textContent="Section "+it.secNum+" · "+it.secTitle;
+  updateFlagBtn(it.q.qid);
+  $("qpos").textContent=(i+1)+" / "+ETAT.total;
+  $("btnPrev").classList.remove("hidden");$("btnPrev").disabled=(i===0);$("btnPrev").textContent="Précédent";
+  $("btnNext").classList.remove("hidden");$("btnNext").textContent=(i===ETAT.total-1)?"Revoir mes réponses":"Suivant";
+  $("btnSubmit").classList.add("hidden");
+  window.scrollTo(0,0);
+}
+function updateFlagBtn(qid){const on=!!ETAT.flags[qid];$("btnFlag").classList.toggle("on",on);$("btnFlag").textContent=on?"🚩 Marquée — cliquer pour retirer":"🚩 Marquer cette question";}
+function showReview(){
+  ETAT.mode='review';
+  document.querySelectorAll('.q-page').forEach(p=>p.classList.add('hidden'));
+  $("examHead").classList.add("hidden");
+  buildGrid($("reviewGrid"));
+  let ans=0,fl=0;ETAT.flat.forEach(it=>{if(isAnswered(it.q.qid))ans++;if(ETAT.flags[it.q.qid])fl++;});
+  const un=ETAT.total-ans;
+  $("reviewStats").innerHTML='<div class="rev-s ok"><b>'+ans+'</b>répondues</div><div class="rev-s '+(un?'warn':'')+'"><b>'+un+'</b>sans réponse</div><div class="rev-s flag"><b>'+fl+'</b>marquées</div>';
+  $("review").classList.remove("hidden");
+  $("btnPrev").classList.remove("hidden");$("btnPrev").disabled=false;$("btnPrev").textContent="Retour aux questions";
+  $("btnNext").classList.add("hidden");$("btnSubmit").classList.remove("hidden");
+  window.scrollTo(0,0);
+}
+function buildGrid(el){
+  let h='';
+  ETAT.flat.forEach((it,idx)=>{const qid=it.q.qid;const cls='navcell'+(isAnswered(qid)?' ans':'')+(ETAT.flags[qid]?' flag':'')+(idx===ETAT.current?' cur':'');h+='<button class="'+cls+'" data-i="'+idx+'">'+(idx+1)+(ETAT.flags[qid]?'<span class="fdot">🚩</span>':'')+'</button>';});
+  el.innerHTML=h;
+  el.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{closeNav();showQuestion(+b.getAttribute("data-i"));});
+}
+document.addEventListener("change",e=>{if(e.target.type==="radio"&&ETAT.flat&&!ETAT.finished){document.querySelectorAll('input[name="'+e.target.name+'"]').forEach(r=>r.closest(".opt").classList.toggle("selected",r.checked));scheduleSave();}});
+function collect(){const r={};(ETAT.flat||[]).forEach(it=>{const c=document.querySelector('input[name="'+it.q.qid+'"]:checked');if(c)r[it.q.qid]=parseInt(c.value,10);});return r;}
 
 /* ---------- Sauvegarde auto ---------- */
 function scheduleSave(){clearTimeout(ETAT.saveTimer);ETAT.saveTimer=setTimeout(saveNow,1200);}
@@ -355,13 +474,27 @@ async function saveNow(){if(ETAT.finished)return;$("saveTag").textContent="…";
 /* ---------- Chrono ---------- */
 function startTimer(){const t=$("timer");const paint=()=>{let r=Math.max(0,Math.round((ETAT.deadline-Date.now())/1000));ETAT.remaining=r;t.textContent=String(Math.floor(r/3600)).padStart(2,'0')+":"+String(Math.floor(r%3600/60)).padStart(2,'0')+":"+String(r%60).padStart(2,'0');if(r<=120)t.classList.add("warn");};paint();ETAT.timer=setInterval(()=>{if(ETAT.finished){clearInterval(ETAT.timer);return;}paint();if(ETAT.remaining<=0){clearInterval(ETAT.timer);alert("Temps écoulé — votre copie va être rendue.");doSubmit(true);}},1000);}
 
-/* ---------- Soumission ---------- */
-$("submitBtn").addEventListener("click",()=>{let u=0;ETAT.sections.forEach(sec=>sec.questions.forEach(q=>{if(!document.querySelector('input[name="'+q.qid+'"]:checked'))u++;}));if(u>0&&!confirm(u+" question(s) sans réponse (comptées fausses).\n\nTerminer quand même ?"))return;doSubmit(false);});
+/* ---------- Navigation, marquage, soumission ---------- */
+$("btnFlag").onclick=()=>{const qid=ETAT.flat[ETAT.current].q.qid;ETAT.flags[qid]=!ETAT.flags[qid];updateFlagBtn(qid);};
+$("btnPrev").onclick=()=>{if(ETAT.mode==='review'){showQuestion(ETAT.total-1);}else if(ETAT.current>0){showQuestion(ETAT.current-1);}};
+$("btnNext").onclick=()=>{if(ETAT.current<ETAT.total-1){showQuestion(ETAT.current+1);}else{showReview();}};
+$("btnOverview").onclick=()=>{buildGrid($("navGrid"));$("navModal").classList.remove("hidden");};
+function closeNav(){$("navModal").classList.add("hidden");}
+$("navClose").onclick=closeNav;
+$("navModal").onclick=e=>{if(e.target.id==="navModal")closeNav();};
+$("btnSubmit").onclick=()=>{
+  let un=0;ETAT.flat.forEach(it=>{if(!isAnswered(it.q.qid))un++;});
+  $("cf_warn").classList.toggle("hidden",un===0);
+  if(un>0)$("cf_warn").innerHTML='⚠ Il vous reste <b>'+un+'</b> question(s) sans réponse. Elles seront comptées comme fausses.';
+  $("confirmModal").classList.remove("hidden");
+};
+$("cfCancel").onclick=()=>$("confirmModal").classList.add("hidden");
+$("cfOk").onclick=()=>{$("confirmModal").classList.add("hidden");doSubmit(false);};
 async function doSubmit(auto){
   if(ETAT.finished)return;ETAT.finished=true;clearInterval(ETAT.timer);clearInterval(ETAT.autoSave);clearTimeout(ETAT.saveTimer);
-  $("submitBtn").disabled=true;$("submitBtn").textContent="Envoi…";
+  $("btnSubmit").disabled=true;$("btnSubmit").textContent="Envoi…";
   const res=await api({action:"submit",code:ETAT.code,reponses:collect()});
-  if(!res.ok){ETAT.finished=false;$("submitBtn").disabled=false;$("submitBtn").textContent="Terminer";startAutosave();alert("Envoi impossible : "+dire(res.raison)+"\nVos réponses sont conservées, recliquez sur Terminer.");return;}
+  if(!res.ok){ETAT.finished=false;$("btnSubmit").disabled=false;$("btnSubmit").textContent="Soumettre";if(ETAT.mode!=='review')showReview();startAutosave();alert("Envoi impossible : "+dire(res.raison)+"\nVos réponses sont conservées, recliquez sur Soumettre.");return;}
   window.removeEventListener("beforeunload",beforeUnload);
   $("actionbar").classList.add("hidden");$("screenExam").classList.add("hidden");
   if(res.reussi) showSuccess(res,auto); else showFail(res,auto);
