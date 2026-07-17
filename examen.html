@@ -400,6 +400,19 @@ function showBlocked(res){
 }
 
 /* ---------- Corrigé PDF ---------- */
+// La police standard du PDF ne gère que le Latin-1 : on remplace les caractères
+// typographiques (→ • — … guillemets courbes) par des équivalents simples,
+// sinon toute la ligne se retrouve espacée et débordante.
+function pdfSafe(s){
+  return String(s==null?"":s)
+    .replace(/[→–—•·]/g,"-")   // → – — • ·  ->  -
+    .replace(/…/g,"...")                            // …  -> ...
+    .replace(/[‘’‚‛]/g,"'")          // guillemets simples courbes
+    .replace(/[“”„]/g,'"')                // guillemets doubles courbes
+    .replace(/[«»]/g,'"')                      // « »
+    .replace(/ /g," ")                              // espace insécable
+    .replace(/[^ -ÿ]/g,"");                    // retire tout autre caractère hors Latin-1
+}
 function telechargerCorrige(){
   const corr=ETAT.corrige||[];
   if(!corr.length){alert("Corrigé indisponible.");return;}
@@ -409,28 +422,28 @@ function telechargerCorrige(){
   const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=48,CW=W-2*M;
   const i=ETAT.info||{};let y=0;
   const need=(h)=>{if(y>H-M-h){doc.addPage();y=M;}};
-  const para=(str,size,font,color,lead,x)=>{doc.setFont('helvetica',font);doc.setFontSize(size);doc.setTextColor(color[0],color[1],color[2]);const ls=doc.splitTextToSize(str,CW-(x?x-M:0));ls.forEach(l=>{need(lead);doc.text(l,x||M,y);y+=lead;});};
+  const para=(str,size,font,color,lead)=>{doc.setFont('helvetica',font);doc.setFontSize(size);doc.setTextColor(color[0],color[1],color[2]);const ls=doc.splitTextToSize(pdfSafe(str),CW);ls.forEach(l=>{need(lead);doc.text(l,M,y);y+=lead;});};
   // bandeau
   doc.setFillColor(18,35,63);doc.rect(0,0,W,74,'F');
   doc.setTextColor(232,169,23);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text("BURK-CO",M,40);
-  doc.setTextColor(255,255,255);doc.setFont('helvetica','normal');doc.setFontSize(11);doc.text("Corrigé de l'examen",M,58);
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','normal');doc.setFontSize(11);doc.text(pdfSafe("Corrige de l'examen"),M,58);
   y=98;
   para(i.titre||"Examen",14,'bold',[18,35,63],18);
   const who=((i.prenom||"")+" "+(i.nom||"")).trim();
-  para("Candidat : "+(who||"—")+"   •   Résultat : "+(ETAT.lastScore||"")+" ("+(ETAT.lastPct!=null?ETAT.lastPct+"%":"")+")   •   "+new Date().toLocaleDateString('fr-FR'),10,'normal',[90,100,120],16);
-  y+=6;
+  para("Candidat : "+(who||"-")+"    Resultat : "+(ETAT.lastScore||"")+" ("+(ETAT.lastPct!=null?ETAT.lastPct+"%":"")+")    "+new Date().toLocaleDateString('fr-FR'),10,'normal',[90,100,120],15);
+  y+=10;
   let lastSec=null,n=0;
   corr.forEach(q=>{
-    if(q.secNum!==lastSec){lastSec=q.secNum;y+=8;need(18);doc.setDrawColor(220,226,238);doc.line(M,y-4,W-M,y-4);para("Section "+q.secNum+" — "+q.secTitle,11.5,'bold',[18,35,63],16);y+=2;}
+    if(q.secNum!==lastSec){lastSec=q.secNum;y+=10;need(22);doc.setDrawColor(214,222,236);doc.setLineWidth(1);doc.line(M,y-6,W-M,y-6);para("Section "+q.secNum+" - "+q.secTitle,12,'bold',[18,35,63],17);y+=3;}
     n++;
-    para(n+". "+q.q,10.5,'bold',[30,40,58],15);
+    para(n+". "+q.q,10.5,'bold',[28,38,56],15);
     if(q.code)para(q.code,9.5,'normal',[70,80,110],13);
     const correctTxt=q.options[q.correct]!=null?q.options[q.correct]:"";
-    const givenTxt=(q.given==null||q.given<0)?"Sans réponse":(q.options[q.given]!=null?q.options[q.given]:"");
-    para("Bonne réponse : "+correctTxt,10,'bold',[20,120,74],14);
-    para("Réponse du candidat : "+givenTxt+(q.ok?"  (correct)":"  (incorrect)"),9.5,'normal',q.ok?[20,120,74]:[176,56,44],13);
-    if(q.explication)para("→ "+q.explication,9.5,'italic',[80,90,110],13);
-    y+=7;
+    const givenTxt=(q.given==null||q.given<0)?"Sans reponse":(q.options[q.given]!=null?q.options[q.given]:"");
+    para("Bonne reponse : "+correctTxt,10,'bold',[20,120,74],14);
+    para("Reponse du candidat : "+givenTxt+(q.ok?"  (correct)":"  (incorrect)"),9.5,'normal',q.ok?[20,120,74]:[176,56,44],13);
+    if(q.explication)para("Explication : "+q.explication,9.5,'italic',[86,96,116],13);
+    y+=10;
   });
   const fn=("corrige_"+(i.titre||"examen")).replace(/[^a-z0-9]+/gi,"_").toLowerCase()+".pdf";
   doc.save(fn);
