@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Examen en ligne — BURK-CO</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -115,7 +118,18 @@
   .hero .pct{font-size:1.15rem;opacity:.92}
   .hero .who{margin-top:12px;font-size:.92rem;opacity:.8}
   .badge-mention{display:inline-block;margin-top:14px;font-weight:700;font-size:.9rem;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.5);border-radius:20px;padding:6px 18px}
-  .result-actions{text-align:center;margin-top:20px;display:flex;flex-direction:column;gap:12px;align-items:center}
+  .result-actions{text-align:center;margin-top:20px;display:flex;flex-direction:column;gap:14px;align-items:center}
+  .corrige{width:100%;text-align:left;margin-top:6px}
+  .cr-sec{font-size:1rem;font-weight:700;color:var(--navy);margin:20px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+  .cr-q{border:1px solid var(--line);border-left:4px solid #cbd5e1;border-radius:12px;padding:14px 16px;margin-bottom:12px;background:#fff}
+  .cr-q.ok{border-left-color:var(--green);background:#f6fbf8}
+  .cr-q.ko{border-left-color:var(--red);background:#fdf7f6}
+  .cr-qh{font-weight:600;margin-bottom:8px;display:flex;gap:9px;align-items:flex-start;color:var(--ink)}
+  .cr-b{flex:none;width:22px;height:22px;border-radius:50%;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .cr-b.ok{background:var(--green)}.cr-b.ko{background:var(--red)}
+  .cr-code{font-family:Consolas,monospace;font-size:.85rem;background:#0f1c31;color:#ffd97a;padding:8px 12px;border-radius:8px;margin:6px 0;white-space:pre-wrap;overflow-x:auto}
+  .cr-line{font-size:.93rem;margin:3px 0}.cr-lbl{color:var(--muted);font-weight:600}
+  .cr-exp{font-size:.9rem;color:#3d4a5c;background:var(--blue-soft);border-radius:9px;padding:9px 13px;margin-top:8px}
   .foot{text-align:center;color:var(--muted);font-size:.78rem;margin-top:26px}
 </style>
 </head>
@@ -365,10 +379,28 @@ function showSuccess(res,auto){
     '<div class="pct">'+(res.pct!=null?res.pct+" % — seuil de réussite "+(res.seuil||70)+" %":"")+'</div>'+
     '<div class="badge-mention">Félicitations '+esc(((ETAT.info||{}).prenom||""))+' !</div>'+
     '<div class="who">'+esc(heroWho())+(auto?" (rendu automatique)":"")+'</div></div>'+
-    '<div class="result-actions"><button class="btn green big" id="btnPdf" style="max-width:360px">⬇ Télécharger le corrigé (PDF)</button>'+
-    '<p style="color:var(--muted);font-size:.9rem">Votre réussite est enregistrée. Vous pouvez fermer cette page.</p></div>';
+    '<div class="result-actions"><div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">'+
+      '<button class="btn green" id="btnPdf">⬇ Télécharger le corrigé (PDF)</button>'+
+      '<button class="btn ghost" id="btnCorrige">📖 Voir mon corrigé détaillé</button></div>'+
+    '<p style="color:var(--muted);font-size:.9rem">Votre réussite est enregistrée. Vous pouvez fermer cette page.</p>'+
+    '<div id="inlineCorrige" class="corrige hidden"></div></div>';
   $("screenResult").innerHTML=html;$("screenResult").classList.remove("hidden");
-  $("btnPdf").onclick=telechargerCorrige;window.scrollTo(0,0);
+  $("btnPdf").onclick=telechargerCorrige;
+  $("btnCorrige").onclick=()=>{const b=$("inlineCorrige");if(b.classList.contains("hidden")){renderCorrigeInline();b.classList.remove("hidden");$("btnCorrige").textContent="🔼 Masquer le corrigé";}else{b.classList.add("hidden");$("btnCorrige").textContent="📖 Voir mon corrigé détaillé";}};
+  window.scrollTo(0,0);
+}
+function renderCorrigeInline(){
+  const corr=ETAT.corrige||[];let html='',lastSec=null;
+  corr.forEach(q=>{
+    if(q.secNum!==lastSec){lastSec=q.secNum;html+='<div class="cr-sec">Section '+q.secNum+' — '+esc(q.secTitle)+'</div>';}
+    const given=(q.given==null||q.given<0)?'<i>Sans réponse</i>':esc(q.options[q.given]);
+    html+='<div class="cr-q '+(q.ok?'ok':'ko')+'"><div class="cr-qh"><span class="cr-b '+(q.ok?'ok':'ko')+'">'+(q.ok?'✓':'✗')+'</span><span>'+esc(q.q)+'</span></div>'+
+      (q.code?'<div class="cr-code">'+esc(q.code)+'</div>':'')+
+      '<div class="cr-line"><span class="cr-lbl">Votre réponse :</span> '+given+'</div>'+
+      (q.ok?'':'<div class="cr-line"><span class="cr-lbl">Bonne réponse :</span> <b>'+esc(q.options[q.correct])+'</b></div>')+
+      (q.explication?'<div class="cr-exp">'+esc(q.explication)+'</div>':'')+'</div>';
+  });
+  $("inlineCorrige").innerHTML=html;
 }
 function showFail(res,auto){
   ETAT.lastPct=res.pct;
