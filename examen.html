@@ -114,7 +114,6 @@
   .hero .ic{width:78px;height:78px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:2.4rem;margin:0 auto 14px;border:3px solid rgba(255,255,255,.4)}
   .hero .rt{font-size:.82rem;letter-spacing:.2em;text-transform:uppercase;opacity:.85}
   .hero .big{font-size:3.2rem;font-weight:800;color:#fff;line-height:1.05;margin:8px 0 2px}
-  .hero .win .big,.hero.win .big{color:#fff}
   .hero .pct{font-size:1.15rem;opacity:.92}
   .hero .who{margin-top:12px;font-size:.92rem;opacity:.8}
   .badge-mention{display:inline-block;margin-top:14px;font-weight:700;font-size:.9rem;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.5);border-radius:20px;padding:6px 18px}
@@ -229,7 +228,7 @@
 
 <script>
 /* ============================================================
-   ⚙️ CONFIGURATION (déjà remplie)
+   CONFIGURATION (déjà remplie)
 ============================================================ */
 const SUPABASE_URL = "https://dddrgmxkywjxxycfoiya.supabase.co";
 const ANON_KEY     = "sb_publishable_kCTukGId2HRQn7lqwZE-ug_DlCzCMiS";
@@ -244,7 +243,7 @@ const dire=(r)=>RAISONS[r]||"Une erreur est survenue.";
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function fdate(iso){try{const d=new Date(iso);return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'long'})+" à "+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}catch(e){return iso;}}
 
-let ETAT={code:"",info:null,sections:null,total:0,timer:null,remaining:0,deadline:0,finished:false,appareil:"web-"+Math.random().toString(36).slice(2,10),autoSave:null,saveTimer:null,corrige:null};
+let ETAT={code:"",info:null,sections:null,total:0,timer:null,remaining:0,deadline:0,finished:false,appareil:"web-"+Math.random().toString(36).slice(2,10),autoSave:null,saveTimer:null,corrige:null,lastScore:"",lastPct:null};
 
 /* code depuis le lien -> on lance auto */
 (function(){const p=new URLSearchParams(location.search);const c=p.get("code")||p.get("cle")||p.get("e");if(c){$("f_code").value=c.trim().toUpperCase();setTimeout(continuer,250);}})();
@@ -285,12 +284,10 @@ function renderHome(info){
     '<div class="rule"><div class="n">'+(info.seuil||70)+'%</div><div class="l">Pour réussir</div></div>'+
     '<div class="rule"><div class="n">'+(info.max||3)+'</div><div class="l">Tentatives / 24 h</div></div>';
   $("rule_seuil").innerHTML='Il faut <b>'+(info.seuil||70)+' %</b> pour réussir. En cas d\'échec, vous pouvez reprendre ('+(info.max||3)+' tentatives par 24 h).';
-  // reprise après échec ?
   if(info.last_pct!=null){
     $("retakeNote").classList.remove("hidden");
     $("retakeNote").innerHTML='Tentative précédente : <b>'+info.last_pct+'%</b> (non réussie). Il vous reste <b>'+(info.attempts_left)+'</b> tentative(s) aujourd\'hui. Bonne chance !';
   } else $("retakeNote").classList.add("hidden");
-  // identité
   if(info.identite_verrou && info.nom){
     $("identBlock").classList.add("hidden");
     $("home_greet").innerHTML='Bonne chance, <b style="color:var(--navy)">'+esc((info.prenom+" "+info.nom).trim())+'</b> !';
@@ -431,19 +428,16 @@ function showBlocked(res){
   $("screenResult").innerHTML=html;$("screenResult").classList.remove("hidden");window.scrollTo(0,0);
 }
 
-/* ---------- Corrigé PDF ---------- */
-// La police standard du PDF ne gère que le Latin-1 : on remplace les caractères
-// typographiques (→ • — … guillemets courbes) par des équivalents simples,
-// sinon toute la ligne se retrouve espacée et débordante.
+/* ---------- Corrigé PDF ----------
+   La police standard du PDF ne gère que le Latin-1. On nettoie chaque texte
+   caractère par caractère (aucun caractère spécial dans le code lui-même)
+   pour éviter que jsPDF ne disloque les lignes. */
 function pdfSafe(s){
-  return String(s==null?"":s)
-    .replace(/[→–—•·]/g,"-")   // → – — • ·  ->  -
-    .replace(/…/g,"...")                            // …  -> ...
-    .replace(/[‘’‚‛]/g,"'")          // guillemets simples courbes
-    .replace(/[“”„]/g,'"')                // guillemets doubles courbes
-    .replace(/[«»]/g,'"')                      // « »
-    .replace(/ /g," ")                              // espace insécable
-    .replace(/[^ -ÿ]/g,"");                    // retire tout autre caractère hors Latin-1
+  s=String(s==null?"":s);
+  var map={8594:"-",8211:"-",8212:"-",8226:"-",183:"-",8230:"...",8216:"'",8217:"'",8218:"'",8219:"'",8220:'"',8221:'"',8222:'"',171:'"',187:'"',160:" "};
+  var out="";
+  for(var i=0;i<s.length;i++){var cp=s.charCodeAt(i);if(map[cp]!==undefined){out+=map[cp];}else if(cp>=32&&cp<=255){out+=s.charAt(i);}}
+  return out;
 }
 function telechargerCorrige(){
   const corr=ETAT.corrige||[];
@@ -455,7 +449,6 @@ function telechargerCorrige(){
   const i=ETAT.info||{};let y=0;
   const need=(h)=>{if(y>H-M-h){doc.addPage();y=M;}};
   const para=(str,size,font,color,lead)=>{doc.setFont('helvetica',font);doc.setFontSize(size);doc.setTextColor(color[0],color[1],color[2]);const ls=doc.splitTextToSize(pdfSafe(str),CW);ls.forEach(l=>{need(lead);doc.text(l,M,y);y+=lead;});};
-  // bandeau
   doc.setFillColor(18,35,63);doc.rect(0,0,W,74,'F');
   doc.setTextColor(232,169,23);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text("BURK-CO",M,40);
   doc.setTextColor(255,255,255);doc.setFont('helvetica','normal');doc.setFontSize(11);doc.text(pdfSafe("Corrige de l'examen"),M,58);
