@@ -346,8 +346,16 @@ const ANON_KEY     = "sb_publishable_kCTukGId2HRQn7lqwZE-ug_DlCzCMiS";
 const FN = SUPABASE_URL.replace(/\/$/,'') + "/functions/v1/passer-examen";
 const LETTERS=['A','B','C','D','E','F'];
 const $=(id)=>document.getElementById(id);
-async function api(p){ try{ const r=await fetch(FN,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+ANON_KEY,"apikey":ANON_KEY},body:JSON.stringify(p)}); return await r.json(); }catch(e){ return {ok:false,raison:"reseau"}; } }
-const RAISONS={cle_manquante:"Veuillez saisir votre code personnel.",identite_manquante:"Veuillez indiquer votre nom et votre prénom.",cle_invalide:"Code inconnu. Vérifiez le code reçu.",cle_fermee:"Cet examen est fermé.",cle_expiree:"Ce code a expiré.",examen_introuvable:"Examen introuvable. Contactez l'organisateur.",reseau:"Connexion impossible. Vérifiez votre accès Internet.",erreur:"Une erreur est survenue."};
+async function api(p){
+  const ctrl=new AbortController();
+  const t=setTimeout(()=>ctrl.abort(),30000);   // délai de sécurité : 30 s max
+  try{
+    const r=await fetch(FN,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+ANON_KEY,"apikey":ANON_KEY},body:JSON.stringify(p),signal:ctrl.signal});
+    clearTimeout(t);
+    return await r.json();
+  }catch(e){ clearTimeout(t); return {ok:false,raison:(e&&e.name==="AbortError")?"delai":"reseau"}; }
+}
+const RAISONS={cle_manquante:"Veuillez saisir votre code personnel.",identite_manquante:"Veuillez indiquer votre nom et votre prénom.",cle_invalide:"Code inconnu. Vérifiez le code reçu.",cle_fermee:"Cet examen est fermé.",cle_expiree:"Ce code a expiré.",examen_introuvable:"Examen introuvable. Contactez l'organisateur.",reseau:"Connexion impossible. Vérifiez votre accès Internet.",delai:"Le serveur a mis trop de temps à répondre.",erreur:"Une erreur est survenue côté serveur."};
 const dire=(r)=>RAISONS[r]||"Une erreur est survenue.";
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function fdate(iso){try{const d=new Date(iso);return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'long'})+" à "+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}catch(e){return iso;}}
