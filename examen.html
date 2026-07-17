@@ -39,7 +39,7 @@
 
   /* ---------- En-tête ---------- */
   header#topbar{background:linear-gradient(135deg,var(--navy),var(--navy-2));color:#fff;padding:20px 20px 16px;border-bottom:4px solid var(--gold);position:sticky;top:0;z-index:5}
-  .head-inner{max-width:780px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .head-inner{max-width:880px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   #topbar .logo-plate{padding:7px 12px}
   #topbar .logo-svg{height:34px}
   .head-txt h1{font-size:1.15rem;font-weight:600;margin:0}
@@ -48,7 +48,7 @@
   .meta-strip b{color:#fff}
   @media(max-width:640px){.meta-strip{margin-left:0;width:100%}}
 
-  main{max-width:780px;margin:0 auto;padding:26px 20px 96px}
+  main{max-width:880px;margin:0 auto;padding:26px 20px 96px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px 28px;margin-bottom:18px;box-shadow:0 1px 3px rgba(18,35,63,.05)}
   .msg{font-size:.9rem;border-radius:10px;padding:12px 15px;margin-top:14px;display:none}
   .msg.err{background:var(--red-soft);color:var(--red);border:1px solid #eec4bf;display:block}
@@ -65,6 +65,15 @@
   .consignes h3{font-size:1.05rem;margin-bottom:.5em;color:var(--navy)}
   .consignes ol{padding-left:1.3em}.consignes li{margin-bottom:.4em}
   .retake-note{background:var(--blue-soft);border:1px solid #cfe0f7;border-radius:12px;padding:14px 18px;margin-bottom:16px;font-size:.95rem;color:var(--navy-2)}
+  .home-client{color:var(--muted);font-size:.95rem;margin-top:2px}
+  .home-hero .rules{margin-top:16px}
+  .home-cols{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;align-items:start;margin-bottom:18px}
+  @media(max-width:720px){.home-cols{grid-template-columns:1fr}}
+  .home-cols>.consignes{margin-bottom:0}
+  .home-side{display:flex;flex-direction:column;gap:16px}
+  .home-side .card{margin-bottom:0}
+  .cta-card{text-align:center;background:linear-gradient(135deg,#fbfcff,#eef3fd);border-color:#dbe6f7}
+  .cta-card .btn.big{margin-top:2px}
 
   /* ---------- Sections & questions ---------- */
   .section{margin-top:26px}
@@ -89,7 +98,7 @@
 
   /* ---------- Barre d'action ---------- */
   .actionbar{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.97);border-top:1px solid var(--line);padding:12px 20px;backdrop-filter:blur(8px);display:flex;align-items:center;gap:16px;box-shadow:0 -4px 20px rgba(18,35,63,.09);z-index:6}
-  .ab-inner{max-width:780px;margin:0 auto;width:100%;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .ab-inner{max-width:880px;margin:0 auto;width:100%;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   #timer{font-family:Consolas,monospace;font-weight:700;font-size:1.05rem;color:var(--navy);background:var(--gold-soft);border:1px solid #f0dfae;border-radius:10px;padding:9px 14px;white-space:nowrap}
   #timer.warn{background:var(--red-soft);color:var(--red);border-color:#eec4bf;animation:pulse 1s infinite}
   @keyframes pulse{50%{opacity:.6}}
@@ -216,36 +225,39 @@
 
   <!-- ACCUEIL -->
   <div id="screenHome" class="hidden">
-    <div class="card">
+    <div class="card home-hero">
       <h2 class="t" id="home_title">—</h2>
-      <div style="color:var(--muted);font-size:.95rem" id="home_client"></div>
+      <div class="home-client" id="home_client"></div>
       <div class="rules" id="home_rules"></div>
     </div>
     <div class="retake-note hidden" id="retakeNote"></div>
-    <div class="card hidden" id="identBlock">
-      <h3 style="color:var(--navy);font-size:1.05rem;margin-bottom:2px">Vos informations</h3>
-      <div style="color:var(--muted);font-size:.88rem;margin-bottom:4px">Elles seront enregistrées avec votre copie.</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px">
-        <div><label class="fld" for="f_nom">Nom</label><input class="txt" id="f_nom" placeholder="Nom de famille"></div>
-        <div><label class="fld" for="f_prenom">Prénom(s)</label><input class="txt" id="f_prenom" placeholder="Prénom(s)"></div>
+    <div class="home-cols">
+      <div class="consignes">
+        <h3>Consignes</h3>
+        <ol>
+          <li>L'examen se présente <b>une question à la fois</b> ; naviguez avec « Précédent » et « Suivant ».</li>
+          <li>Une seule bonne réponse par question.</li>
+          <li>Le <b>chronomètre démarre</b> au clic sur « Démarrer » et ne se met pas en pause.</li>
+          <li>Vos réponses sont <b>enregistrées automatiquement</b>. Vous pouvez <b>marquer 🚩</b> une question pour y revenir.</li>
+          <li>En cas de coupure, rouvrez votre lien : l'examen <b>reprend</b> avec le temps restant.</li>
+          <li id="rule_seuil">Il faut <b>70 %</b> pour réussir. En cas d'échec, vous pouvez reprendre (3 tentatives par 24 h).</li>
+        </ol>
       </div>
-      <label class="fld" for="f_structure">Structure / Entité</label>
-      <input class="txt" id="f_structure" placeholder="Ex. Direction des Engagements">
-    </div>
-    <div class="consignes">
-      <h3>Consignes</h3>
-      <ol>
-        <li>Une seule bonne réponse par question.</li>
-        <li>Le <b>chronomètre démarre</b> au clic sur « Démarrer » et ne se met pas en pause.</li>
-        <li>Vos réponses sont <b>enregistrées automatiquement</b>.</li>
-        <li>En cas de coupure, rouvrez votre lien : l'examen <b>reprend</b> avec le temps restant.</li>
-        <li id="rule_seuil">Il faut <b>70 %</b> pour réussir. En cas d'échec, vous pouvez reprendre (3 tentatives par 24 h).</li>
-      </ol>
-    </div>
-    <div class="card" style="text-align:center">
-      <p style="color:var(--muted);font-size:.92rem;margin-bottom:16px" id="home_greet"></p>
-      <button class="btn big gold" id="btnStart">Démarrer l'examen</button>
-      <div class="msg" id="homeMsg"></div>
+      <div class="home-side">
+        <div class="card hidden" id="identBlock">
+          <h3 style="color:var(--navy);font-size:1.05rem;margin-bottom:2px">Vos informations</h3>
+          <div style="color:var(--muted);font-size:.88rem;margin-bottom:6px">Elles seront enregistrées avec votre copie.</div>
+          <label class="fld" for="f_nom">Nom</label><input class="txt" id="f_nom" placeholder="Nom de famille">
+          <label class="fld" for="f_prenom">Prénom(s)</label><input class="txt" id="f_prenom" placeholder="Prénom(s)">
+          <label class="fld" for="f_structure">Structure / Entité</label>
+          <input class="txt" id="f_structure" placeholder="Ex. Direction des Engagements">
+        </div>
+        <div class="card cta-card">
+          <p style="color:var(--muted);font-size:.92rem;margin-bottom:14px" id="home_greet"></p>
+          <button class="btn big gold" id="btnStart">Démarrer l'examen</button>
+          <div class="msg" id="homeMsg"></div>
+        </div>
+      </div>
     </div>
   </div>
 
