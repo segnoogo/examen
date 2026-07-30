@@ -1,0 +1,761 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>BURK-CO — Console des examens</title>
+<style>
+:root{
+  --navy:#172554; --navy-2:#0f1c3f; --blue:#224289; --blue-soft:#3b5bb5;
+  --orange:#FA6706; --orange-soft:#ff8a3d;
+  --bg:#eef2f8; --surface:#fff; --line:#e4e9f2; --line-soft:#eef2f8;
+  --ink:#1b2333; --muted:#64748b; --muted-2:#94a3b8;
+  --ok:#15824a; --ok-bg:#e7f5ee; --bad:#c0392b; --bad-bg:#fdecea; --warn:#b9740a; --warn-bg:#fff3e0;
+  --ring:rgba(34,66,137,.18);
+  --shadow-sm:0 1px 2px rgba(15,28,63,.06),0 1px 3px rgba(15,28,63,.04);
+  --shadow:0 6px 24px rgba(15,28,63,.08),0 1px 2px rgba(15,28,63,.05);
+  --radius:16px; --radius-sm:11px; --side-w:250px; --top-h:64px;
+}
+*{box-sizing:border-box}
+body{font-family:"Segoe UI",Calibri,system-ui,-apple-system,sans-serif;margin:0;color:var(--ink);background:var(--bg);line-height:1.5}
+h2{font-size:15px;color:var(--navy);margin:0 0 16px;font-weight:700;display:flex;align-items:center;gap:9px}
+h2::before{content:"";width:4px;height:16px;border-radius:3px;background:linear-gradient(var(--orange),var(--orange-soft));flex:none}
+small{color:var(--muted)}
+.logo-svg{display:block;width:auto}
+
+/* Login */
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:radial-gradient(1000px 500px at 20% -10%,rgba(34,66,137,.12),transparent 60%),radial-gradient(800px 460px at 100% 0,rgba(250,103,6,.08),transparent 55%),var(--bg)}
+#connCard{max-width:430px;width:100%;padding:28px 30px 30px;border-radius:20px;box-shadow:var(--shadow);border:1px solid var(--line);position:relative;overflow:hidden;background:#fff}
+#connCard::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--navy),var(--blue),var(--orange))}
+#connCard .logo-svg{height:46px;margin:2px 0 14px}
+#connCard h2{font-size:18px;margin-bottom:6px}
+.hint{font-size:12.5px;color:var(--muted);margin:14px 0 0;line-height:1.6}
+.muted{color:var(--muted);font-size:13px}
+
+/* Shell / Sidebar */
+.shell{display:flex;min-height:100vh}
+.sidebar{width:var(--side-w);flex:none;background:linear-gradient(180deg,var(--navy),#14224e 55%,#101d40);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;z-index:40}
+.side-brand{display:flex;flex-direction:column;gap:10px;padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand-plate{display:inline-block;background:#fff;border-radius:10px;padding:8px 12px;align-self:flex-start;box-shadow:0 6px 16px rgba(0,0,0,.3)}
+.brand-plate .logo-svg{height:30px}
+.sb-sub{font-size:11px;color:#adbce0;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.side-nav{padding:14px 12px;display:flex;flex-direction:column;gap:4px;flex:1}
+.nav-item{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:10px;color:#c7d3ee;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,color .15s;user-select:none}
+.nav-item .ic{width:20px;text-align:center;font-size:15px}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-item.active{background:linear-gradient(135deg,var(--orange),var(--orange-soft));color:#fff;box-shadow:0 4px 12px rgba(250,103,6,.35)}
+.side-foot{padding:14px;border-top:1px solid rgba(255,255,255,.08)}
+.side-user{display:flex;align-items:center;gap:10px}
+.ava-mini{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px}
+.su-txt b{display:block;font-size:13px}.su-txt small{color:#adbce0;font-size:11px}
+
+/* Main / Topbar */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:30;height:var(--top-h);background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 22px}
+.burger{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:var(--navy);padding:4px 8px;border-radius:8px}
+.viewttl{font-size:17px;font-weight:700;color:var(--navy);margin:0;white-space:nowrap}
+.badge{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.3px;background:rgba(250,103,6,.12);color:#c85a00;border:1px solid rgba(250,103,6,.4);padding:5px 12px;border-radius:999px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--orange)}
+.disc{font-size:12.5px;color:var(--muted);cursor:pointer;font-weight:600;padding:6px 12px;border-radius:8px;border:1px solid var(--line)}
+.disc:hover{background:#f1f5fb;color:var(--navy)}
+.content{padding:24px 26px;width:100%;max-width:1200px}
+.view[hidden]{display:none}
+
+/* Cards / forms / buttons */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow-sm);margin-bottom:20px}
+label{display:block;font-size:11.5px;font-weight:700;color:var(--blue);margin:12px 0 6px}
+input,select,textarea{width:100%;padding:10px 13px;border:1px solid var(--line);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;color:var(--ink);background:#fff;transition:border-color .15s,box-shadow .15s}
+textarea{min-height:96px;resize:vertical;font-family:Consolas,monospace;font-size:13px}
+input:hover,select:hover{border-color:#cdd7e8}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue-soft);box-shadow:0 0 0 4px var(--ring)}
+.row{display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:2px 18px}
+@media(max-width:620px){.formgrid{grid-template-columns:1fr}}
+.btn{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:var(--radius-sm);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s,transform .05s;white-space:nowrap}
+.btn:hover{background:#f4f7fc;border-color:#cdd7e8}.btn:active{transform:translateY(1px)}
+.btn.primary{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border-color:transparent;box-shadow:0 2px 8px rgba(23,37,84,.25)}
+.btn.primary:hover{background:linear-gradient(135deg,var(--navy-2),#1c326b)}
+.btn.mini{padding:6px 11px;font-size:12px;border-radius:8px}
+.btn.danger{color:var(--bad);border-color:#f1cdc8;background:#fff}.btn.danger:hover{background:var(--bad-bg)}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.hint{font-size:12.5px;color:var(--muted)}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+@media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-sm);transition:transform .12s,box-shadow .12s}
+.stat:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.stat .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.stat .l{font-size:13px;color:var(--muted);font-weight:500}
+.stat .ic{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex:none;font-size:18px}
+.stat .ic.t-navy{background:#eef1fb;color:var(--navy)}.stat .ic.t-ok{background:var(--ok-bg);color:var(--ok)}
+.stat .ic.t-warn{background:var(--warn-bg);color:var(--warn)}.stat .ic.t-orange{background:rgba(250,103,6,.12);color:#c85a00}
+.stat .v{font-size:28px;font-weight:800;color:var(--navy);margin-top:8px;line-height:1}
+
+/* Bar chart */
+.barchart{display:flex;flex-direction:column;gap:11px}
+.bar-row{display:grid;grid-template-columns:200px 1fr 74px;align-items:center;gap:12px}
+.bar-row .bl{font-weight:600;color:var(--navy);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{height:12px;border-radius:999px;background:#eef2f8;overflow:hidden}
+.bar-fill{height:100%;border-radius:999px;min-width:3px;background:linear-gradient(90deg,var(--blue-soft),var(--blue));transition:width .5s}
+.bar-val{font-size:12px;font-weight:700;color:var(--muted);text-align:right;white-space:nowrap}
+@media(max-width:560px){.bar-row{grid-template-columns:110px 1fr 60px;gap:9px}}
+
+/* Table */
+.tbar{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.tbar h2{margin:0}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:var(--radius-sm);max-height:520px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead th{text-align:left;padding:11px 12px;color:var(--muted);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--line);position:sticky;top:0;background:#fff}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+tbody td:last-child{white-space:nowrap}
+.iconbtn{margin-right:2px}
+tbody tr:hover{background:#f8fafc}
+.pill{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.soon{background:var(--warn-bg);color:var(--warn)}.pill.grey{background:#eef1f6;color:#64748b}
+.code-badge{background:#0f1c31;color:#ffd97a;font-family:Consolas,monospace;font-weight:700;padding:2px 8px;border-radius:6px;font-size:12.5px}
+.iconbtn{width:30px;height:30px;padding:0;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:8px;font-size:14px;cursor:pointer;margin-right:4px}
+.iconbtn:hover{background:#f1f5fb}.iconbtn.danger{color:var(--bad);border-color:#f1cdc8}
+.ok-note{background:var(--ok-bg);color:var(--ok);border-left:4px solid var(--ok);padding:11px 14px;border-radius:9px;font-size:13px;margin:14px 0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{background:#fff;color:var(--navy);border:none;border-radius:0;padding:8px 14px;font-size:13px;cursor:pointer}
+.seg button.active{background:var(--navy);color:#fff}
+.subtle{background:#f8fafc;border:1px solid var(--line);border-radius:var(--radius-sm);padding:16px 18px;margin-bottom:16px}
+.hidden{display:none!important}
+/* Éditeur de questionnaires */
+.bank-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;border:1px solid var(--line);border-radius:11px;margin-bottom:9px;background:#fff}
+.bank-item small{color:#64748b}
+.bank-item.locked{background:#f8fafc}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;vertical-align:middle}
+.pill.grey{background:#eef2f8;color:#5b6b8c}
+.ed-sec{border:1px solid var(--line);border-radius:13px;padding:14px 16px;margin:14px 0;background:#fbfcff}
+.ed-sec-head{display:flex;gap:10px;align-items:center;margin-bottom:6px}
+.ed-q{border:1px solid var(--line);border-left:3px solid var(--blue-soft);border-radius:11px;padding:12px 14px;margin:11px 0;background:#fff}
+.ed-q-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px}
+.ed-num{font-weight:800;color:var(--navy);font-size:12px;background:#eef1fb;padding:3px 9px;border-radius:6px}
+.ed-optrow{display:flex;gap:8px;align-items:center;margin:6px 0}
+.ed-optrow input[type=radio]{width:auto;flex:none;margin:0}
+.ed-opt{flex:1}
+.ed-type{width:auto;padding:7px 10px}
+#bankEditor label{display:block;font-size:12px;color:#5b6b8c;font-weight:600;margin:8px 0 3px}
+
+@media(max-width:900px){
+  .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);transition:transform .25s;box-shadow:0 0 40px rgba(0,0,0,.4)}
+  body.nav-open .sidebar{transform:none}
+  .burger{display:inline-block}
+  .scrim{display:block;position:fixed;inset:0;background:rgba(15,28,63,.45);opacity:0;pointer-events:none;transition:opacity .25s;z-index:35}
+  body.nav-open .scrim{opacity:1;pointer-events:auto}
+}
+
+/* --- Affinages mobile --- */
+@media(max-width:640px){
+  #loginScreen{padding:16px}
+  #connCard{padding:24px 20px}
+  .wrap{padding:14px 12px}
+  .content{padding:16px 13px}
+  .card{padding:16px 15px;margin-bottom:14px}
+  .topbar{padding:0 12px;gap:8px;height:56px}
+  .viewttl{display:none}
+  .badge{display:none}
+  .disc{margin-left:auto}
+  h2{font-size:14px}
+  .tablewrap table{min-width:660px}
+  .stat{padding:14px 15px}
+  .stat .v{font-size:24px}
+  .stat .ic{width:32px;height:32px;font-size:15px}
+  .modal{padding:10px}
+  .modal-box{max-height:94vh}
+  .modal-head{padding:14px 16px}
+  .dm-meta{padding:10px 16px}
+  .dm-tents{padding:10px 16px 0}
+  .dm-body{padding:12px 16px 16px}
+}
+
+/* Fenêtre de détail des réponses */
+.modal{position:fixed;inset:0;background:rgba(15,28,63,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60}
+.modal-box{background:#fff;border-radius:16px;max-width:820px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 30px 70px rgba(0,0,0,.4)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
+.modal-head b{color:var(--navy);font-size:15px}
+.modal-close{cursor:pointer;font-size:18px;color:var(--muted);padding:2px 9px;border-radius:6px}
+.modal-close:hover{background:#f1f5fb;color:var(--navy)}
+.dm-meta{padding:12px 20px;color:var(--muted);font-size:13px;border-bottom:1px solid var(--line-soft);display:flex;gap:16px;flex-wrap:wrap}
+.dm-tents{padding:12px 20px 0;display:flex;gap:8px;flex-wrap:wrap}
+.tent-tab{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer;font-weight:600}
+.tent-tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.dm-body{padding:14px 20px 22px;overflow:auto}
+.dm-sec{font-size:13px;font-weight:700;color:var(--navy);margin:16px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--line)}
+.dm-q{border:1px solid var(--line);border-left:4px solid #cbd5e1;border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.dm-q.ok{border-left-color:var(--ok);background:#f6fbf8}.dm-q.ko{border-left-color:var(--bad);background:#fdf7f6}
+.dm-qh{font-weight:600;color:var(--ink);font-size:14px;margin-bottom:8px}
+.dm-badge{display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;color:#fff;font-size:12px;margin-right:6px}
+.dm-badge.ok{background:var(--ok)}.dm-badge.ko{background:var(--bad)}
+.dm-code{font-family:Consolas,monospace;font-size:12.5px;background:#0f1c31;color:#ffd97a;padding:8px 12px;border-radius:8px;margin:6px 0;white-space:pre-wrap;overflow-x:auto}
+.dm-line{font-size:13.5px;margin:3px 0}.dm-lbl{color:var(--muted);font-weight:600}
+.dm-exp{font-size:13px;color:#3d4a5c;background:#f3f6fb;border-radius:8px;padding:8px 12px;margin-top:8px}
+</style></head><body>
+
+<!-- ===== CONNEXION ===== -->
+<div id="loginScreen">
+  <div id="connCard">
+    <svg class="logo-svg" viewBox="0 0 410 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BURK-CO">
+      <rect x="16" y="12" width="15" height="74" rx="4" fill="#2f2f2f"/>
+      <path d="M31 12 H54 a18 18 0 0 1 0 34 H31 Z" fill="#2f2f2f"/>
+      <path d="M31 50 H58 a19 19 0 0 1 0 36 H31 Z" fill="#2f2f2f"/>
+      <polyline points="20,82 38,58 52,66 76,30" fill="none" stroke="#12a0e0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M88 18 L82 36 L69 24 Z" fill="#12a0e0"/>
+      <text x="104" y="52" font-family="Segoe UI,Arial,sans-serif" font-size="34" font-weight="800" fill="#0f7fc0" letter-spacing="1">BURK-CO</text>
+      <text x="106" y="71" font-family="Segoe UI,Arial,sans-serif" font-size="9.5" font-weight="600" fill="#2f6a92" letter-spacing="0.6">COMPÉTENCE · RIGUEUR · SATISFACTION</text>
+    </svg>
+    <h2>Console des examens</h2>
+    <label>Mot de passe administrateur</label>
+    <input id="cPass" type="password" placeholder="Saisis ton mot de passe admin">
+    <div class="row"><button id="connBtn" class="btn primary">Se connecter</button><span id="connMsg" class="muted"></span></div>
+    <p class="hint">🔒 La connexion passe par ta fonction sécurisée <b>gerer-examens</b>. Le mot de passe est mémorisé uniquement dans ce navigateur, sur ton PC.</p>
+  </div>
+</div>
+
+<!-- ===== APPLICATION ===== -->
+<div id="appArea" style="display:none"><div class="shell">
+  <div class="scrim" id="scrim"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="side-brand">
+      <span class="brand-plate">
+        <svg class="logo-svg" viewBox="0 0 410 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BURK-CO">
+          <rect x="16" y="12" width="15" height="74" rx="4" fill="#2f2f2f"/>
+          <path d="M31 12 H54 a18 18 0 0 1 0 34 H31 Z" fill="#2f2f2f"/>
+          <path d="M31 50 H58 a19 19 0 0 1 0 36 H31 Z" fill="#2f2f2f"/>
+          <polyline points="20,82 38,58 52,66 76,30" fill="none" stroke="#12a0e0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M88 18 L82 36 L69 24 Z" fill="#12a0e0"/>
+          <text x="104" y="52" font-family="Segoe UI,Arial,sans-serif" font-size="34" font-weight="800" fill="#0f7fc0" letter-spacing="1">BURK-CO</text>
+          <text x="106" y="71" font-family="Segoe UI,Arial,sans-serif" font-size="9.5" font-weight="600" fill="#2f6a92" letter-spacing="0.6">COMPÉTENCE · RIGUEUR · SATISFACTION</text>
+        </svg>
+      </span>
+      <span class="sb-sub">Console des examens</span>
+    </div>
+    <nav class="side-nav">
+      <div class="nav-item active" data-view="dash"><span class="ic">▤</span><span>Tableau de bord</span></div>
+      <div class="nav-item" data-view="exams"><span class="ic">🗂</span><span>Examens</span></div>
+      <div class="nav-item" data-view="create"><span class="ic">＋</span><span>Nouvel examen</span></div>
+      <div class="nav-item" data-view="banks"><span class="ic">📝</span><span>Questionnaires</span></div>
+      <div class="nav-item" data-view="part"><span class="ic">👥</span><span>Participants &amp; codes</span></div>
+    </nav>
+    <div class="side-foot"><div class="side-user"><span class="ava-mini">A</span><div class="su-txt"><b>Admin</b><small>BURK-CO</small></div></div></div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="burger" id="burger">☰</button>
+      <h1 class="viewttl" id="viewTitle">Tableau de bord</h1>
+      <div class="badge">PRIVÉ</div>
+      <span class="disc" id="discLink">Se déconnecter</span>
+    </header>
+
+    <div class="content">
+
+      <!-- Tableau de bord -->
+      <section class="view" id="view-dash">
+        <div class="stats" id="stats"></div>
+        <div class="card"><h2>Participation par examen</h2><div id="chartPart" class="barchart"></div></div>
+      </section>
+
+      <!-- Nouvel examen -->
+      <section class="view" id="view-create" hidden>
+        <div class="card">
+          <h2>Créer un examen</h2>
+          <p class="hint" style="margin:-6px 0 6px">Un examen = une configuration. Ensuite, tu génères un code personnel par candidat dans « Participants & codes ».</p>
+          <div class="formgrid">
+            <div><label>Intitulé de l'examen</label><input id="c_titre" value="Examen final — Formation Power Query"></div>
+            <div><label>Client / Organisation</label><input id="c_client" value="Coris Bank International Holding"></div>
+            <div><label>Jeu de questions</label><select id="c_examen"><option value="power_query">Power Query (35 questions)</option><option value="power_bi">Power BI (30 questions)</option></select></div>
+            <div><label>Durée (minutes)</label><input id="c_duree" type="number" value="45" min="5"></div>
+            <div><label>Ce que voit le candidat à la fin</label><select id="c_mode">
+              <option value="score" selected>Son score uniquement</option>
+              <option value="rien">Rien (juste une confirmation)</option>
+              <option value="correction">Score + correction détaillée</option></select></div>
+            <div><label>Mélanger questions &amp; options</label><select id="c_melange"><option value="1" selected>Oui (recommandé)</option><option value="0">Non</option></select></div>
+            <div><label>Expire le (optionnel)</label><input id="c_exp" type="date"></div>
+          </div>
+          <div class="row"><button id="btnCreate" class="btn primary">Créer l'examen</button></div>
+        </div>
+      </section>
+
+      <!-- Questionnaires (éditeur) -->
+      <section class="view" id="view-banks" hidden>
+        <div id="bankList">
+          <div class="card">
+            <div class="tbar"><h2>Mes questionnaires</h2>
+              <button class="btn primary" id="btnNewBank" style="margin-left:auto">＋ Nouveau questionnaire</button></div>
+            <p class="hint" style="margin:-6px 0 10px">Crée des examens avec tes propres questions. « Power Query » est intégré (non modifiable).</p>
+            <div id="banksRows"></div>
+          </div>
+        </div>
+        <div id="bankEditor" class="hidden">
+          <div class="card">
+            <div class="tbar"><h2 id="ed_title">Questionnaire</h2>
+              <button class="btn" id="btnBankCancel" style="margin-left:auto">Retour</button>
+              <button class="btn primary" id="btnBankSave">Enregistrer</button></div>
+            <label>Titre du questionnaire</label>
+            <input id="bk_titre" placeholder="Ex. Examen Excel — niveau 1">
+            <div id="ed_sections"></div>
+            <div class="row"><button class="btn" id="btnAddSection">＋ Ajouter une section</button></div>
+            <div class="ok-note hidden" id="ed_msg"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Examens -->
+      <section class="view" id="view-exams" hidden>
+        <div class="card">
+          <div class="tbar"><h2>Mes examens</h2><span class="muted" id="examCnt"></span>
+            <button class="btn primary" data-view="create" style="margin-left:auto">＋ Nouvel examen</button>
+            <button class="btn" id="btnRefresh">Actualiser</button></div>
+          <div class="tablewrap"><table><thead><tr><th>Examen</th><th>Durée</th><th>Résultat</th><th>Statut</th><th>Participants</th><th>Actions</th></tr></thead><tbody id="sessRows"></tbody></table></div>
+          <small id="sessEmpty"></small>
+        </div>
+      </section>
+
+      <!-- Participants & codes -->
+      <section class="view" id="view-part" hidden>
+        <div id="partEmpty" class="card"><h2>Participants &amp; codes</h2><p class="muted">Va dans « Examens » et clique sur <b>Gérer</b> pour choisir un examen, générer des codes et voir les résultats.</p></div>
+        <div id="partPanel" class="hidden">
+          <div class="subtle" id="partHead"></div>
+          <div class="card">
+            <h2>Générer des codes personnels</h2>
+            <div class="seg" style="margin-bottom:10px">
+              <button id="segNombre" class="active">Par nombre</button>
+              <button id="segNoms">Par liste de noms</button>
+            </div>
+            <div id="boxNombre">
+              <label>Combien de codes ?</label>
+              <div class="row" style="margin-top:0"><div style="max-width:170px"><input id="g_count" type="number" value="10" min="1" max="500"></div>
+              <button id="btnGenNombre" class="btn primary">Générer</button></div>
+            </div>
+            <div id="boxNoms" class="hidden">
+              <label>Un nom par ligne (le code sera rattaché au nom)</label>
+              <textarea id="g_noms" placeholder="Awa Traoré&#10;Moussa Diallo&#10;Fatou Ndiaye"></textarea>
+              <div class="row"><button id="btnGenNoms" class="btn primary">Générer les codes</button></div>
+            </div>
+            <div id="genOut" class="hidden">
+              <div class="ok-note" id="genMsg"></div>
+              <label>Liens à envoyer (un par candidat)</label>
+              <textarea id="genLinks" readonly style="min-height:130px"></textarea>
+              <div class="row"><button class="btn" id="btnCopyLinks">Copier tous les liens</button></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="tbar"><h2>Participants</h2><span class="muted" id="partCnt"></span>
+              <button class="btn" id="btnExport" style="margin-left:auto">Exporter CSV</button>
+              <button class="btn" id="btnResRefresh">Actualiser</button></div>
+            <div class="stats" id="resStats" style="margin-bottom:14px"></div>
+            <div class="tablewrap"><table><thead><tr><th>Code</th><th>Nom</th><th>Prénom</th><th>Structure</th><th>Score</th><th>%</th><th>Réussi</th><th>Tent.</th><th>Statut</th><th>Terminé le</th><th>Actions</th></tr></thead><tbody id="resRows"></tbody></table></div>
+            <small id="resEmpty"></small>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div></div>
+
+<!-- Détail des réponses d'un candidat -->
+<div id="detailModal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-head"><b id="dm_title">—</b><span class="modal-close" id="dm_close">✕</span></div>
+    <div class="dm-meta" id="dm_meta"></div>
+    <div class="dm-tents" id="dm_tents"></div>
+    <div class="dm-body" id="dm_body"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ⚙️ CONFIGURATION (déjà remplie)
+============================================================ */
+const SUPABASE_URL = "https://dddrgmxkywjxxycfoiya.supabase.co";
+const ANON_KEY     = "sb_publishable_kCTukGId2HRQn7lqwZE-ug_DlCzCMiS";
+const EXAM_URL     = "https://segnoogo.github.io/examen/examen.html";
+/* ============================================================ */
+
+const FN = SUPABASE_URL.replace(/\/$/,'') + "/functions/v1/gerer-examens";
+const STORE = "burkco_exam_pass";
+const $ = (id)=>document.getElementById(id);
+let PASS="", SESSIONS=[], RES_CODE="", RES_ROWS=[], creating=false;
+const TITLES = { dash:"Tableau de bord", exams:"Examens", create:"Nouvel examen", banks:"Questionnaires", part:"Participants & codes" };
+
+async function api(payload){
+  try{
+    const r = await fetch(FN,{ method:"POST",
+      headers:{ "Content-Type":"application/json","Authorization":"Bearer "+ANON_KEY,"apikey":ANON_KEY },
+      body: JSON.stringify(Object.assign({ motdepasse:PASS }, payload)) });
+    return await r.json();
+  }catch(e){ return { ok:false, raison:"Connexion impossible (vérifie Internet)." }; }
+}
+function lienPour(code){ if(!EXAM_URL) return "code : "+code; const s=EXAM_URL.indexOf("?")>=0?"&":"?"; return EXAM_URL+s+"code="+code; }
+function copy(txt,btn){ navigator.clipboard.writeText(txt).then(()=>{ const t=btn.textContent; btn.textContent="Copié !"; setTimeout(()=>btn.textContent=t,1200); }); }
+function flash(btn,txt){ const o=btn.textContent; btn.textContent=txt; btn.disabled=true; setTimeout(()=>{ btn.textContent=o; btn.disabled=false; },1100); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmt(iso){ try{ const d=new Date(iso); return d.toLocaleDateString('fr-FR')+" "+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }catch(e){ return iso; } }
+
+/* ---------- Connexion (mémorisée -> survit au F5) ---------- */
+$("connBtn").onclick = ()=>connect();
+$("cPass").addEventListener("keydown",e=>{ if(e.key==="Enter") connect(); });
+async function connect(){
+  PASS = $("cPass").value;
+  $("connMsg").textContent="Connexion…";
+  const res = await api({ action:"list_sessions" });
+  if(!res.ok){ $("connMsg").textContent = res.raison==="motdepasse" ? "Mot de passe incorrect." : ("Erreur : "+(res.raison||"inconnue")); return; }
+  try{ localStorage.setItem(STORE, PASS); }catch(e){}
+  $("connMsg").textContent="";
+  $("loginScreen").style.display="none"; $("appArea").style.display="block";
+  SESSIONS = res.data||[]; renderDash(); renderExams(); loadBanksIntoSelect();
+}
+$("discLink").onclick = ()=>{ try{ localStorage.removeItem(STORE); }catch(e){} PASS=""; location.reload(); };
+/* reconnexion auto au chargement */
+(function(){ try{ const p=localStorage.getItem(STORE); if(p){ $("cPass").value=p; connect(); } }catch(e){} })();
+
+/* ---------- Navigation ---------- */
+document.querySelectorAll('.nav-item[data-view],[data-view]').forEach(n=>{
+  if(n.classList.contains('nav-item') || n.tagName==='BUTTON') n.addEventListener('click',()=>showView(n.getAttribute('data-view')));
+});
+$("burger").onclick=()=>document.body.classList.toggle('nav-open');
+$("scrim").onclick=()=>document.body.classList.remove('nav-open');
+function showView(v){
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active', x.getAttribute('data-view')===v));
+  document.querySelectorAll('.view').forEach(x=>x.hidden = (x.id!=='view-'+v));
+  $("viewTitle").textContent = TITLES[v]||"";
+  document.body.classList.remove('nav-open');
+  if(v==='dash'){ renderDash(); }
+  if(v==='exams'){ refresh(); }
+  if(v==='create'){ loadBanksIntoSelect(); }
+  if(v==='banks'){ renderBanks(); }
+  window.scrollTo(0,0);
+}
+
+/* ---------- Données ---------- */
+async function refresh(){ const res=await api({action:"list_sessions"}); if(res.ok){ SESSIONS=res.data||[]; renderDash(); renderExams(); } }
+$("btnRefresh").onclick=()=>{ refresh(); flash($("btnRefresh"),"Actualisé ✓"); };
+
+function renderDash(){
+  let nAct=0,nPart=0,nFini=0;
+  SESSIONS.forEach(s=>{ if(s.statut==="actif")nAct++; nPart+=s.participants||0; nFini+=s.termines||0; });
+  $("stats").innerHTML =
+    stat("Examens", SESSIONS.length, "🗂","t-navy")+
+    stat("Actifs", nAct, "✓","t-ok")+
+    stat("Participants", nPart, "👥","t-orange")+
+    stat("Copies terminées", nFini, "✔","t-warn");
+  const withP = SESSIONS.filter(s=>(s.participants||0)>0);
+  $("chartPart").innerHTML = withP.length ? withP.map(s=>{
+    const p=s.participants||0, f=s.termines||0, pct=p?Math.round(f/p*100):0;
+    return '<div class="bar-row"><div class="bl" title="'+esc(s.titre)+'">'+esc(s.titre)+'</div>'+
+      '<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%"></div></div>'+
+      '<div class="bar-val">'+f+'/'+p+'</div></div>';
+  }).join('') : '<p class="muted">Aucun participant pour l\'instant. Crée un examen puis génère des codes.</p>';
+}
+function stat(l,v,ic,t){ return '<div class="stat"><div class="top"><span class="l">'+l+'</span><span class="ic '+t+'">'+ic+'</span></div><div class="v">'+v+'</div></div>'; }
+
+function renderExams(){
+  const tb=$("sessRows"); tb.innerHTML="";
+  SESSIONS.forEach(s=>{
+    const modeLbl={score:"Score",rien:"Rien",correction:"Correction"}[s.mode_resultat]||s.mode_resultat;
+    const stat = s.statut==="actif"?'<span class="pill ok">actif</span>':'<span class="pill grey">fermé</span>';
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td><b>'+esc(s.titre||"")+'</b><br><small>'+esc(s.client||"")+'</small></td>'+
+      '<td>'+(s.duree_min||45)+' min</td><td>'+modeLbl+'</td><td>'+stat+'</td>'+
+      '<td><b>'+(s.termines||0)+'</b> / '+(s.participants||0)+'</td>'+
+      '<td><button class="btn mini primary" data-res="'+s.code+'">Gérer</button> '+
+      '<button class="btn mini" data-toggle="'+s.code+'">'+(s.statut==="actif"?"Fermer":"Rouvrir")+'</button> '+
+      '<button class="iconbtn danger" data-del="'+s.code+'" title="Supprimer">🗑</button></td>';
+    tb.appendChild(tr);
+  });
+  $("examCnt").textContent = SESSIONS.length ? (SESSIONS.length+" examen(s)") : "";
+  $("sessEmpty").textContent = SESSIONS.length ? "" : "Aucun examen. Crée-en un depuis « Nouvel examen ».";
+  tb.querySelectorAll("[data-res]").forEach(b=>b.onclick=()=>gerer(b.getAttribute("data-res")));
+  tb.querySelectorAll("[data-toggle]").forEach(b=>b.onclick=async()=>{
+    const code=b.getAttribute("data-toggle"),s=SESSIONS.find(x=>x.code===code);
+    const r=await api({action:"update_session",code,statut:s.statut==="actif"?"ferme":"actif"}); if(r.ok) refresh(); else alert("Erreur : "+r.raison);
+  });
+  tb.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{
+    if(!confirm("Supprimer cet examen ET tous ses participants ? Irréversible.")) return;
+    const r=await api({action:"delete_session",code:b.getAttribute("data-del")}); if(r.ok){ refresh(); showView('exams'); } else alert("Erreur : "+r.raison);
+  });
+}
+
+/* ---------- Créer un examen (isolé -> pas de doublon) ---------- */
+$("btnCreate").onclick = async ()=>{
+  if(creating) return; creating=true;
+  $("btnCreate").disabled=true; $("btnCreate").textContent="Création…";
+  const res = await api({ action:"create_session",
+    titre:$("c_titre").value.trim()||"Examen", client:$("c_client").value.trim()||null, examen:$("c_examen").value,
+    duree_min:parseInt($("c_duree").value,10)||45, mode_resultat:$("c_mode").value, melange:$("c_melange").value==="1", expire_le:$("c_exp").value||null });
+  creating=false; $("btnCreate").disabled=false; $("btnCreate").textContent="Créer l'examen";
+  if(!res.ok){ alert("Erreur : "+(res.raison||"inconnue")); return; }
+  await refresh();
+  gerer(res.data.code);   // bascule direct vers la génération des codes
+};
+
+/* ---------- Questionnaires (éditeur de questions) ---------- */
+let BANK=null;
+function newQ(){ return { t:"qcm", q:"", code:"", o:["","",""], a:0, x:"" }; }
+
+/* Remplit le menu déroulant « Jeu de questions » de la création d'examen. */
+async function loadBanksIntoSelect(){
+  const sel=$("c_examen"); if(!sel) return;
+  const res=await api({action:"list_banks"});
+  const banks = res.ok ? (res.data||[]) : [];
+  const cur=sel.value;
+  let h='<option value="power_query">Power Query (intégré, 35 questions)</option>'+
+        '<option value="power_bi">Power BI (intégré, 30 questions)</option>';
+  h += banks.map(b=>'<option value="'+esc(b.code)+'">'+esc(b.titre)+' ('+(b.nb_questions||0)+' questions)</option>').join('');
+  sel.innerHTML=h;
+  if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+}
+
+/* Liste des questionnaires. */
+async function renderBanks(){
+  $("bankEditor").classList.add("hidden"); $("bankList").classList.remove("hidden");
+  $("banksRows").innerHTML='<p class="hint">Chargement…</p>';
+  const res=await api({action:"list_banks"});
+  const banks = res.ok ? (res.data||[]) : [];
+  let h='<div class="bank-item locked"><div><b>Power Query</b> <span class="pill grey">intégré</span><br><small>35 questions · non modifiable</small></div></div>';
+  h += banks.map(b=>'<div class="bank-item"><div><b>'+esc(b.titre)+'</b><br><small>'+(b.nb_questions||0)+' question(s) · '+(b.nb_sections||0)+' section(s)</small></div>'+
+    '<div style="white-space:nowrap"><button class="btn" style="padding:7px 12px" data-edit="'+esc(b.code)+'">Modifier</button> '+
+    '<button class="iconbtn danger" data-delbank="'+esc(b.code)+'" title="Supprimer">🗑</button></div></div>').join('');
+  $("banksRows").innerHTML=h;
+  $("banksRows").querySelectorAll("[data-edit]").forEach(x=>x.onclick=()=>editBank(x.getAttribute("data-edit")));
+  $("banksRows").querySelectorAll("[data-delbank]").forEach(x=>x.onclick=async()=>{
+    if(!confirm("Supprimer définitivement ce questionnaire ?")) return;
+    const r=await api({action:"delete_bank",code:x.getAttribute("data-delbank")});
+    if(r.ok){ renderBanks(); loadBanksIntoSelect(); } else alert("Erreur : "+(r.raison||"inconnue"));
+  });
+}
+$("btnNewBank").onclick=()=>{ BANK={ code:null, titre:"", sections:[{ title:"Section 1", questions:[newQ()] }] }; openEditor(); };
+async function editBank(code){
+  const r=await api({action:"get_bank",code});
+  if(!r.ok){ alert("Erreur : "+(r.raison||"inconnue")); return; }
+  const c=r.data.contenu||{};
+  BANK={ code:r.data.code, titre:r.data.titre||"", sections:Array.isArray(c.sections)?c.sections:[] };
+  if(!BANK.sections.length) BANK.sections=[{ title:"Section 1", questions:[newQ()] }];
+  openEditor();
+}
+function openEditor(){ $("bankList").classList.add("hidden"); $("bankEditor").classList.remove("hidden"); $("ed_msg").classList.add("hidden"); renderEditor(); }
+$("btnBankCancel").onclick=()=>renderBanks();
+
+/* Construit le formulaire d'édition à partir de l'objet BANK. */
+function renderEditor(){
+  $("ed_title").textContent = BANK.code ? "Modifier le questionnaire" : "Nouveau questionnaire";
+  $("bk_titre").value = BANK.titre||"";
+  let h='';
+  BANK.sections.forEach((sec,si)=>{
+    h+='<div class="ed-sec" data-si="'+si+'"><div class="ed-sec-head"><span class="ed-num">Section '+(si+1)+'</span>'+
+       '<input class="ed-sectitle" value="'+esc(sec.title||"")+'" placeholder="Titre de la section" style="flex:1">'+
+       '<button class="iconbtn danger" data-delsec="'+si+'" title="Supprimer la section">🗑</button></div>';
+    (sec.questions||[]).forEach((q,qi)=>{
+      const isVF = q.t==="vf";
+      h+='<div class="ed-q" data-si="'+si+'" data-qi="'+qi+'"><div class="ed-q-head"><span class="ed-num">Q'+(qi+1)+'</span>'+
+         '<select class="ed-type"><option value="qcm"'+(!isVF?" selected":"")+'>QCM</option><option value="vf"'+(isVF?" selected":"")+'>Vrai / Faux</option></select>'+
+         '<span style="flex:1"></span>'+
+         '<button class="iconbtn" data-mv="up" title="Monter">↑</button>'+
+         '<button class="iconbtn" data-mv="down" title="Descendre">↓</button>'+
+         '<button class="iconbtn danger" data-delq="1" title="Supprimer la question">🗑</button></div>'+
+         '<label>Énoncé de la question</label><textarea class="ed-enonce" style="min-height:54px">'+esc(q.q||"")+'</textarea>'+
+         '<label>Code / formule à afficher (optionnel)</label><input class="ed-code" value="'+esc(q.code||"")+'" placeholder="Ex. Date.QuarterOfYear([Date])">';
+      if(isVF){
+        h+='<label>Bonne réponse</label><div class="ed-optrow">'+
+           '<label style="display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--navy);margin:0"><input type="radio" class="ed-vf" name="c_'+si+'_'+qi+'" value="true"'+(q.a===true?" checked":"")+'> Vrai</label>'+
+           '<label style="display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--navy);margin:0 0 0 18px"><input type="radio" class="ed-vf" name="c_'+si+'_'+qi+'" value="false"'+(q.a===false?" checked":"")+'> Faux</label></div>';
+      }else{
+        h+='<label>Options — coche la bonne réponse</label>';
+        (q.o||[]).forEach((op,oi)=>{
+          h+='<div class="ed-optrow"><input type="radio" class="ed-correct" name="c_'+si+'_'+qi+'" data-oi="'+oi+'"'+(q.a===oi?" checked":"")+'>'+
+             '<input class="ed-opt" value="'+esc(op)+'" placeholder="Option '+(oi+1)+'">'+
+             '<button class="iconbtn danger" data-delopt="'+oi+'" title="Retirer cette option">✕</button></div>';
+        });
+        h+='<div class="row" style="margin-top:4px"><button class="btn" style="padding:6px 11px;font-size:12px" data-addopt="1">＋ Option</button></div>';
+      }
+      h+='<label>Explication (affichée dans le corrigé)</label><textarea class="ed-exp" style="min-height:42px">'+esc(q.x||"")+'</textarea></div>';
+    });
+    h+='<div class="row"><button class="btn" style="padding:7px 12px" data-addq="'+si+'">＋ Ajouter une question</button></div></div>';
+  });
+  $("ed_sections").innerHTML=h;
+  bindEditor();
+}
+
+/* (Re)branche les boutons après chaque rendu. On lit d'abord le formulaire
+   (readEditor) pour ne perdre aucune saisie, puis on modifie BANK, puis on réaffiche. */
+function bindEditor(){
+  const S=$("ed_sections");
+  S.querySelectorAll(".ed-sec").forEach(secEl=>{
+    const si=+secEl.getAttribute("data-si");
+    secEl.querySelector("[data-delsec]").onclick=()=>{ readEditor(); BANK.sections.splice(si,1); if(!BANK.sections.length) BANK.sections=[{title:"Section 1",questions:[newQ()]}]; renderEditor(); };
+    secEl.querySelector("[data-addq]").onclick=()=>{ readEditor(); BANK.sections[si].questions.push(newQ()); renderEditor(); };
+    secEl.querySelectorAll(".ed-q").forEach(qEl=>{
+      const qi=+qEl.getAttribute("data-qi");
+      qEl.querySelector(".ed-type").onchange=(e)=>{ readEditor(); const Q=BANK.sections[si].questions[qi]; Q.t=e.target.value; if(Q.t==="qcm"&&(!Q.o||!Q.o.length)) Q.o=["","",""]; renderEditor(); };
+      qEl.querySelector("[data-delq]").onclick=()=>{ readEditor(); BANK.sections[si].questions.splice(qi,1); if(!BANK.sections[si].questions.length) BANK.sections[si].questions=[newQ()]; renderEditor(); };
+      qEl.querySelectorAll("[data-mv]").forEach(b=>b.onclick=()=>{ readEditor(); const arr=BANK.sections[si].questions; const j=b.getAttribute("data-mv")==="up"?qi-1:qi+1; if(j<0||j>=arr.length) return; const t=arr[qi]; arr[qi]=arr[j]; arr[j]=t; renderEditor(); });
+      const addopt=qEl.querySelector("[data-addopt]"); if(addopt) addopt.onclick=()=>{ readEditor(); BANK.sections[si].questions[qi].o.push(""); renderEditor(); };
+      qEl.querySelectorAll("[data-delopt]").forEach(b=>b.onclick=()=>{ readEditor(); const Q=BANK.sections[si].questions[qi]; const oi=+b.getAttribute("data-delopt"); Q.o.splice(oi,1); if(!Q.o.length) Q.o=[""]; if(Q.a>=Q.o.length) Q.a=0; renderEditor(); });
+    });
+  });
+}
+
+/* Lit tout le formulaire et reconstruit BANK.sections. */
+function readEditor(){
+  BANK.titre=$("bk_titre").value.trim();
+  const secs=[];
+  $("ed_sections").querySelectorAll(".ed-sec").forEach(secEl=>{
+    const title=secEl.querySelector(".ed-sectitle").value.trim();
+    const questions=[];
+    secEl.querySelectorAll(".ed-q").forEach(qEl=>{
+      const t=qEl.querySelector(".ed-type").value;
+      const q=qEl.querySelector(".ed-enonce").value.trim();
+      const code=qEl.querySelector(".ed-code").value.trim();
+      const x=qEl.querySelector(".ed-exp").value.trim();
+      const obj={ t, q, x }; if(code) obj.code=code;
+      if(t==="vf"){ const c=qEl.querySelector(".ed-vf:checked"); obj.a = c ? (c.value==="true") : true; }
+      else{ obj.o=[...qEl.querySelectorAll(".ed-opt")].map(i=>i.value.trim()); const c=qEl.querySelector(".ed-correct:checked"); obj.a = c ? parseInt(c.getAttribute("data-oi"),10) : 0; }
+      questions.push(obj);
+    });
+    secs.push({ title, questions });
+  });
+  BANK.sections=secs;
+}
+$("btnAddSection").onclick=()=>{ readEditor(); BANK.sections.push({ title:"Section "+(BANK.sections.length+1), questions:[newQ()] }); renderEditor(); };
+
+/* Enregistre le questionnaire (avec vérifications). */
+$("btnBankSave").onclick=async()=>{
+  readEditor();
+  const msg=$("ed_msg");
+  if(!BANK.titre){ showEdMsg(false,"Donne un titre au questionnaire."); return; }
+  let nb=0, err="";
+  BANK.sections.forEach((s,si)=>{
+    (s.questions||[]).forEach((q,qi)=>{
+      nb++; const ref=" (Section "+(si+1)+", Q"+(qi+1)+")";
+      if(!q.q) err=err||("Une question est sans énoncé"+ref+".");
+      if(q.t!=="vf"){
+        const filled=(q.o||[]).filter(Boolean);
+        if(filled.length<2) err=err||("Une question QCM a moins de 2 options remplies"+ref+".");
+        else if(!q.o[q.a]) err=err||("La bonne réponse pointe une option vide"+ref+".");
+      }
+    });
+  });
+  if(nb===0) err=err||"Ajoute au moins une question.";
+  if(err){ showEdMsg(false,err); return; }
+  $("btnBankSave").disabled=true; $("btnBankSave").textContent="Enregistrement…";
+  const res=await api({ action:"save_bank", code:BANK.code, titre:BANK.titre, contenu:{ sections:BANK.sections } });
+  $("btnBankSave").disabled=false; $("btnBankSave").textContent="Enregistrer";
+  if(!res.ok){ showEdMsg(false,"Erreur : "+(res.raison||"inconnue")); return; }
+  BANK.code = res.data.code;
+  showEdMsg(true,"✓ Questionnaire enregistré ("+nb+" question(s)). Il apparaît maintenant dans « Jeu de questions » à la création d'un examen.");
+  loadBanksIntoSelect();
+};
+function showEdMsg(ok,txt){
+  const m=$("ed_msg"); m.classList.remove("hidden"); m.textContent=(ok?"":"⚠ ")+txt;
+  m.style.background = ok?"var(--ok-bg)":"var(--bad-bg)";
+  m.style.color = ok?"var(--ok)":"var(--bad)";
+  m.style.borderLeftColor = ok?"var(--ok)":"var(--bad)";
+}
+
+/* ---------- Générer des codes ---------- */
+$("segNombre").onclick=()=>{ $("segNombre").classList.add("active");$("segNoms").classList.remove("active");$("boxNombre").classList.remove("hidden");$("boxNoms").classList.add("hidden"); };
+$("segNoms").onclick=()=>{ $("segNoms").classList.add("active");$("segNombre").classList.remove("active");$("boxNoms").classList.remove("hidden");$("boxNombre").classList.add("hidden"); };
+$("btnGenNombre").onclick=()=>genCodes({ count:parseInt($("g_count").value,10)||0 });
+$("btnGenNoms").onclick=()=>{ const noms=$("g_noms").value.split("\n").map(x=>x.trim()).filter(Boolean); if(!noms.length){ alert("Ajoute au moins un nom."); return; } genCodes({ noms }); };
+async function genCodes(extra){
+  $("btnGenNombre").disabled=$("btnGenNoms").disabled=true;
+  const res=await api(Object.assign({action:"generate_codes",session_code:RES_CODE},extra));
+  $("btnGenNombre").disabled=$("btnGenNoms").disabled=false;
+  if(!res.ok){ alert("Erreur : "+(res.raison||"inconnue")); return; }
+  const rows=res.data||[];
+  $("genOut").classList.remove("hidden");
+  $("genMsg").textContent = rows.length+" code(s) généré(s). Envoie à chaque candidat le lien correspondant :";
+  $("genLinks").value = rows.map(r=>(r.nom?(r.nom+" : "):"")+lienPour(r.code_perso)).join("\n");
+  chargerParticipants();
+}
+$("btnCopyLinks").onclick=()=>copy($("genLinks").value,$("btnCopyLinks"));
+
+/* ---------- Participants ---------- */
+function gerer(code){
+  RES_CODE=code; const s=SESSIONS.find(x=>x.code===code);
+  const modeLbl = s ? ({score:"score",rien:"rien",correction:"correction"}[s.mode_resultat]||s.mode_resultat) : "";
+  $("partEmpty").classList.add("hidden"); $("partPanel").classList.remove("hidden"); $("genOut").classList.add("hidden");
+  $("partHead").innerHTML = '<b style="color:var(--navy)">'+esc(s?s.titre:"")+'</b> &nbsp; <span class="code-badge">'+code+'</span> &nbsp; <small>'+(s?(s.duree_min+" min · "+modeLbl):"")+'</small>';
+  showView('part');
+  chargerParticipants();
+}
+$("btnResRefresh").onclick=()=>{ chargerParticipants(); flash($("btnResRefresh"),"Actualisé ✓"); };
+async function chargerParticipants(){
+  const res=await api({action:"list_copies",session_code:RES_CODE});
+  if(!res.ok){ alert("Erreur : "+res.raison); return; }
+  RES_ROWS=res.data||[];
+  const tb=$("resRows"); tb.innerHTML=""; let fini=0,somme=0,enc=0;
+  RES_ROWS.forEach(c=>{
+    const done=c.statut==="termine"; if(done){fini++;somme+=(c.pct||0);} if(c.statut==="en_cours")enc++;
+    const st=done?'<span class="pill ok">terminé</span>':(c.statut==="en_cours"?'<span class="pill soon">en cours</span>':'<span class="pill grey">pas commencé</span>');
+    const tr=document.createElement("tr");
+    const reussiBadge = c.reussi ? '<span class="pill ok">✓ Réussi</span>' : (done?'<span class="pill grey">non</span>':'—');
+    tr.innerHTML='<td><span class="code-badge">'+c.code_perso+'</span></td><td><b>'+esc(c.nom||"—")+'</b></td><td>'+esc(c.prenom||"")+'</td><td>'+esc(c.structure||"")+'</td>'+
+      '<td>'+(done?(c.score+" / "+c.total):"—")+'</td><td>'+(done?(c.pct+" %"):"—")+'</td>'+
+      '<td>'+reussiBadge+'</td><td>'+(c.nb_tentatives||0)+'</td><td>'+st+'</td><td>'+(c.termine_le?fmt(c.termine_le):"—")+'</td>'+
+      '<td><button class="iconbtn" data-detail="'+c.id+'" title="Voir le détail des réponses">📄</button>'+
+      '<button class="iconbtn" data-lien="'+c.code_perso+'" title="Copier le lien">🔗</button>'+
+      '<button class="iconbtn" data-reset="'+c.id+'" title="Réinitialiser">↺</button>'+
+      '<button class="iconbtn danger" data-delc="'+c.id+'" title="Supprimer">🗑</button></td>';
+    tb.appendChild(tr);
+  });
+  $("partCnt").textContent = RES_ROWS.length?(RES_ROWS.length+" code(s)"):"";
+  $("resEmpty").textContent = RES_ROWS.length?"":"Aucun code. Génère-en ci-dessus.";
+  const moy=fini?Math.round(somme/fini):0;
+  $("resStats").innerHTML = stat("Codes",RES_ROWS.length,"🎫","t-navy")+stat("En cours",enc,"⏱","t-orange")+stat("Terminés",fini,"✔","t-ok")+stat("Moyenne",moy+" %","📊","t-warn");
+  tb.querySelectorAll("[data-detail]").forEach(b=>b.onclick=()=>openDetail(b.getAttribute("data-detail")));
+  tb.querySelectorAll("[data-lien]").forEach(b=>b.onclick=()=>copy(lienPour(b.getAttribute("data-lien")),b));
+  tb.querySelectorAll("[data-reset]").forEach(b=>b.onclick=async()=>{ if(!confirm("Réinitialiser ce code ? Le candidat pourra recomposer.")) return; const r=await api({action:"reset_copie",id:b.getAttribute("data-reset")}); if(r.ok) chargerParticipants(); else alert("Erreur : "+r.raison); });
+  tb.querySelectorAll("[data-delc]").forEach(b=>b.onclick=async()=>{ if(!confirm("Supprimer ce participant et son code ?")) return; const r=await api({action:"delete_copie",id:b.getAttribute("data-delc")}); if(r.ok) chargerParticipants(); else alert("Erreur : "+r.raison); });
+}
+
+/* ---------- Détail des réponses d'un candidat ---------- */
+let DM=null;
+async function openDetail(id){
+  const res=await api({action:"copie_detail", id});
+  if(!res.ok){ alert("Erreur : "+res.raison); return; }
+  DM=res.data; renderDetail(); $("detailModal").classList.remove("hidden");
+}
+function renderDetail(){
+  const c=DM, tents=Array.isArray(c.tentatives)?c.tentatives:[];
+  $("dm_title").textContent = ((c.prenom?c.prenom+" ":"")+(c.nom||"—"))+" — "+c.code_perso;
+  $("dm_meta").innerHTML = (c.structure?'<span>'+esc(c.structure)+'</span>':'')+
+    '<span>'+(c.reussi?'<b style="color:var(--ok)">Réussi ✓</b>':'Non réussi')+'</span>'+
+    '<span>'+(c.nb_tentatives||0)+' tentative(s)</span>'+
+    (c.pct!=null&&c.score!=null?'<span>Dernier : <b>'+c.score+'/'+c.total+' ('+c.pct+'%)</b></span>':'');
+  $("dm_tents").innerHTML = tents.length ? tents.map((t,i)=>'<button class="tent-tab'+(i===tents.length-1?' active':'')+'" data-t="'+i+'">Tentative '+t.n+' · '+t.pct+'%'+(t.reussi?' ✓':'')+'</button>').join('') : '<span class="muted">Aucune tentative terminée pour ce candidat.</span>';
+  $("dm_tents").querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{ $("dm_tents").querySelectorAll(".tent-tab").forEach(x=>x.classList.remove("active")); b.classList.add("active"); renderTent(+b.getAttribute("data-t")); });
+  renderTent(tents.length-1);
+}
+function renderTent(i){
+  const tents=Array.isArray(DM.tentatives)?DM.tentatives:[]; const t=tents[i];
+  if(!t){ $("dm_body").innerHTML='<p class="muted">Ce candidat n\'a pas encore composé.</p>'; return; }
+  const corr=t.correction||[]; let html='',lastSec=null;
+  corr.forEach(q=>{
+    if(q.secNum!==lastSec){ lastSec=q.secNum; html+='<div class="dm-sec">Section '+q.secNum+' — '+esc(q.secTitle)+'</div>'; }
+    const givenTxt=(q.given==null||q.given<0)?'<i>Sans réponse</i>':esc(q.options[q.given]);
+    html+='<div class="dm-q '+(q.ok?'ok':'ko')+'"><div class="dm-qh"><span class="dm-badge '+(q.ok?'ok':'ko')+'">'+(q.ok?'✓':'✕')+'</span>'+esc(q.q)+'</div>'+
+      (q.code?'<div class="dm-code">'+esc(q.code)+'</div>':'')+
+      '<div class="dm-line"><span class="dm-lbl">Réponse du candidat :</span> '+givenTxt+'</div>'+
+      (q.ok?'':'<div class="dm-line"><span class="dm-lbl">Bonne réponse :</span> <b>'+esc(q.options[q.correct])+'</b></div>')+
+      (q.explication?'<div class="dm-exp">'+esc(q.explication)+'</div>':'')+'</div>';
+  });
+  $("dm_body").innerHTML = html || '<p class="muted">Pas de détail disponible.</p>';
+}
+$("dm_close").onclick=()=>$("detailModal").classList.add("hidden");
+$("detailModal").onclick=(e)=>{ if(e.target.id==="detailModal") $("detailModal").classList.add("hidden"); };
+
+/* ---------- Export CSV ---------- */
+$("btnExport").onclick=()=>{
+  if(!RES_ROWS.length){ alert("Aucune donnée à exporter."); return; }
+  const head=["Code","Nom","Prenom","Structure","Lien","Statut","Score","Total","Pourcentage","Termine_le"];
+  const lignes=RES_ROWS.map(c=>[c.code_perso,c.nom||"",c.prenom||"",c.structure||"",lienPour(c.code_perso),c.statut,c.statut==="termine"?c.score:"",c.statut==="termine"?c.total:"",c.statut==="termine"?c.pct:"",c.termine_le?fmt(c.termine_le):""]);
+  const csv=[head].concat(lignes).map(r=>r.map(v=>{v=String(v==null?"":v);return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(";")).join("\r\n");
+  const blob=new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="participants_"+RES_CODE+".csv"; a.click();
+  flash($("btnExport"),"Exporté ✓");
+};
+</script>
+</body></html>
